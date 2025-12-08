@@ -5,7 +5,9 @@ from .views_v1 import (
     UserLoginView,
     UserLogoutView,
     TokenRefreshView,
-    ChangePasswordView
+    ChangePasswordView,
+    ForgotPasswordView,
+    ResetPasswordView,
 )
 
 # API v1 URL patterns 
@@ -16,4 +18,6 @@ urlpatterns = [
     path("logout/", UserLogoutView.as_view(), name="logout"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("change-password/", ChangePasswordView.as_view(), name="change-password"),
+    path("forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
+    path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
     ]
