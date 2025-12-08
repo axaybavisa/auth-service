@@ -1,13 +1,21 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin 
-from .models import CustomUser, EmailOTP
+from .models import CustomUser, EmailOTP, PasswordResetToken
 
 
+# Email OTP - inline
 class EmailOTPInline(admin.TabularInline):
     model = EmailOTP
     extra = 0
     readonly_fields = ('code', 'created_at', 'is_used')
     can_delete = False
+
+
+# Password-reset token - inline
+class PasswordResetTokenInline(admin.TabularInline):
+    model = PasswordResetToken
+    extra = 0
+    readonly_fields = ("token_hash", "created_at", "used")
 
 
 # Register your custom user model with the admin site
@@ -54,7 +62,7 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email',)
 
 
-    inlines = [EmailOTPInline]
+    inlines = [EmailOTPInline, PasswordResetTokenInline]
 
 # Register the custom user model with the admin site
 admin.site.register(CustomUser, CustomUserAdmin)

@@ -1,7 +1,7 @@
 import random
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import PaswordResetToken
+from .models import PasswordResetToken
 
 from .models import EmailOTP
 
@@ -25,9 +25,9 @@ def send_otp_via_email(user):
 
 # For Forgot Password Link
 def send_password_reset_email(user):
-    raw_token, token_obj = PaswordResetToken.generate(user) 
+    raw_token, token_obj = PasswordResetToken.generate(user) 
 
-    reset_url = f"{settings.FRONTED_URL}/reset-password/{raw_token}"
+    reset_url = f"{settings.FRONTEND_URL}/reset-password/{raw_token}"
 
     subject = "Reset Your Password"
     message = f"Click The link below to rest password:\n\n{reset_url}"

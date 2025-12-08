@@ -17,6 +17,9 @@ DEBUG = env.bool('DEBUG')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
+# Frontend url for password reset
+FRONTEND_URL = "http://127.0.0.1:8000"
+
 
 # Application definition
 INSTALLED_APPS = [

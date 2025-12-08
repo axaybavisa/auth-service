@@ -2,8 +2,9 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from django.contrib.auth.hashers import check_password
 
-from .models import EmailOTP
+from .models import EmailOTP, PasswordResetToken
 
 # Get the User model
 User = get_user_model()
@@ -175,13 +176,35 @@ class ResetPasswordSerializer(serializers.Serializer):
     confirm_password = serializers.CharField(write_only=True)
 
     def validate(self, attrs):
+        token = attrs.get("token")
         password = attrs.get("password")
         confirm_password = attrs.get("confirm_password")
 
+        # check password
         if password != confirm_password:
             raise serializers.ValidationError({"password": "Passwords do not match"})
 
+        # validate password strength
         validate_password(password)
 
+        # validate the math token in db
+        tokens = PasswordResetToken.objects.filter(used=False)
+        matched = None
+
+        for obj in tokens:
+            if check_password(token, obj.token_hash):
+                matched = obj
+                break
+
+        if matched is None:
+            raise serializers.ValidationError({"token": "Invalid or expired token."})
+
+        # check token expiry    
+        if matched.is_expired():
+            raise serializers.ValidationError({"token": "Token has expired."})    
+
+        # password validation - send token_obj forward
+        attrs["token_obj"] = matched
+        
         return attrs
     

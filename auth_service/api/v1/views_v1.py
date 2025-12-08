@@ -5,9 +5,8 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from django.utils import timezone
-from django.contrib.auth.hashers import check_password
 
-from users.models import PaswordResetToken
+from users.models import PasswordResetToken
 from users.task import send_otp_via_email, send_password_reset_email 
 from users.serializers import(
     RegisterSerializer,
@@ -78,9 +77,10 @@ class UserLoginView(generics.GenericAPIView):
 
         return Response(
             {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'email': user.email
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "email": user.email,
+                "detail": "Login Successful."
             },
             status=status.HTTP_200_OK
         )
@@ -141,7 +141,6 @@ class ChangePasswordView(generics.GenericAPIView):
 
 # Forgot Password
 class ForgotPasswordView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
     serializer_class = ForgotPasswordSerializer
 
     def post(self, request, *args,**kwargs):
@@ -161,29 +160,19 @@ class ForgotPasswordView(generics.GenericAPIView):
 class ResetPasswordView(generics.GenericAPIView):
     serializer_class = ResetPasswordSerializer
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        token = serializer.validated_data["token"]
+        token_obj = serializer.validated_data["token_obj"]
         new_password = serializer.validated_data["password"]
-
-        # find token
-        tokens = PaswordResetToken.objects.filter(used=False)
-        for obj in tokens:
-            if check_password(token, obj.token_hash):
-                if obj.is_expired():
-                    return Response({"error": "Token expired."}, status=status.HTTP_400_BAD_REQUEST)
                 
-                user = obj.user
-                user.set_password(new_password)
-                user.save
+        user = token_obj.user
+        user.set_password(new_password)
+        user.save()
 
-                obj.used = True
-                obj.save()
+        token_obj.used = True
+        token_obj.save()
                 
-                return Response({"message": "Password reset successful."})
-            
-            return Response({"error": "Invalid token."}, status=status.HTTP_400_BAD_REQUEST)
-            
+        return Response({"message": "Password reset successful."}, status=status.HTTP_200_OK)
 
