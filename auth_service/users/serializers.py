@@ -3,7 +3,6 @@ from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
-from .utils import send_otp_via_email
 from .models import EmailOTP
 
 # Get the User model
@@ -28,19 +27,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         password = validated_data.pop("password")
-        email = validated_data.pop("email")
 
         user = User.objects.create_user(
-            email=email,
+            password=password,
             is_active=False,
             **validated_data
         )
-        
-        user.set_password(password)
-        user.save()
-
-        send_otp_via_email(user)
-
         return user
     
 
@@ -164,4 +156,32 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         instance.set_password(new_password)
         instance.save()
         return instance
+    
+
+# Forgot Password
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("No User Associated with this Email.")
+        return value
+
+
+# Reset Password
+class ResetPasswordSerializer(serializers.Serializer):
+    token = serializers.CharField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        password = attrs.get("password")
+        confirm_password = attrs.get("confirm_password")
+
+        if password != confirm_password:
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+
+        validate_password(password)
+
+        return attrs
     

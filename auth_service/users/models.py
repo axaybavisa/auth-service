@@ -1,9 +1,13 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
-import datetime
+from django.contrib.auth.hashers import make_password
+from datetime import timedelta
+import uuid
 
 from .manager import CustomUserManager
+
 
 # Custom User Model
 class CustomUser(AbstractBaseUser, PermissionsMixin):
@@ -55,7 +59,27 @@ class EmailOTP(models.Model):
         ]
 
     def is_expired(self, expiry_minutes=10):
-        return self.created_at + datetime.timedelta(minutes=expiry_minutes) < timezone.now()
+        return self.created_at + timedelta(minutes=expiry_minutes) < timezone.now()
 
     def __str__(self):
         return f"{self.user.email} - {self.code}"   
+
+
+# Password ResetToken 
+class PaswordResetToken(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    token_hash = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=10)
+    
+    @classmethod
+    def generate(cls, user):
+        raw_token = uuid.uuid4().hex
+        hashed = make_password(raw_token)
+        obj = cls.objects.create(user=user, token_hash=hashed)
+
+        return raw_token, obj
+    
