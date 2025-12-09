@@ -6,7 +6,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from django.utils import timezone
 
-from users.models import PasswordResetToken
 from users.task import send_otp_via_email, send_password_reset_email 
 from users.serializers import(
     RegisterSerializer,
