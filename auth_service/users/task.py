@@ -1,14 +1,15 @@
 import random
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import PasswordResetToken
+from celery import shared_task
 
-from .models import EmailOTP
+from .models import EmailOTP, PasswordResetToken
 
 # For Verify-OTP
 def generate_otp():
     return f"{random.randint(100000, 999999)}"
 
+@shared_task
 def send_otp_via_email(user):
     EmailOTP.objects.filter(user=user, is_used=False).delete()  # Remove any existing OTPs for the user
 
@@ -24,6 +25,7 @@ def send_otp_via_email(user):
 
 
 # For Forgot Password Link
+@shared_task
 def send_password_reset_email(user):
     raw_token, token_obj = PasswordResetToken.generate(user) 
 

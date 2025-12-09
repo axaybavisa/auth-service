@@ -10,7 +10,10 @@ class RolePermission(BasePermission):
         if not user or not user.is_authenticated:
             return False
 
-        roles = getattr(view, "allowed_role", self.allowed_roles)
+        roles = getattr(view, "allowed_roles", self.allowed_roles)
+        
+        if not roles:
+            return False
         
         return user.role in roles
 
