@@ -6,7 +6,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # API Version 1
-    path('api/', include(('api.urls', 'api'), namespace='v1')),
+    path('api/v1/', include(('users.urls', 'api'), namespace='v1')),
 
 
     # Swagger Documentation
