@@ -2,11 +2,15 @@ from django.contrib.auth.models import BaseUserManager
 
 class CustomUserManager(BaseUserManager):
     # For User
-    def create_user(self, email, first_name=None, last_name=None, role="Customer", password=None, **extra_fields):
+    def create_user(self, email, password=None, first_name="", last_name="", role="Customer", **extra_fields):
         if not email:
-            raise ValueError("The Email fields is required")
+            raise ValueError("The Email field is required")
         
         email = self.normalize_email(email)
+
+        extra_fields.setdefault("is_active", False)
+        extra_fields.setdefault("is_staff", False)
+
         
         user = self.model(
             email = email,
@@ -21,7 +25,7 @@ class CustomUserManager(BaseUserManager):
         return user
 
     # For Super User Creation-Admin
-    def create_superuser(self, email, first_name, last_name, password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("role", "Admin")
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
@@ -36,11 +40,6 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(
             email=email, 
-            first_name=first_name, 
-            last_name=last_name,    
             password=password, 
             **extra_fields
             )   
-
-    
-

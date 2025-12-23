@@ -55,7 +55,7 @@ class VerifyOTPSerializer(serializers.Serializer):
         # get latest OTP
         try:
             otp = EmailOTP.objects.filter(
-                user=user, code=code, is_used=False
+                user=user, code=code, used=False
             ).latest("created_at")
         except EmailOTP.DoesNotExist:
             raise serializers.ValidationError({"code": "Invalid OTP code."}) 
@@ -73,7 +73,7 @@ class VerifyOTPSerializer(serializers.Serializer):
         otp = self.validated_data["otp"]
 
         #mark otp used
-        otp.is_used = True
+        otp.used = True
         otp.save()
 
         # activate user

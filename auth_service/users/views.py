@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from django.utils import timezone
+from django.db import transaction
 
 from users.task import send_otp_via_email, send_password_reset_email 
 from users.serializers import(
@@ -26,12 +27,14 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         user = serializer.save()
 
-        send_otp_via_email(user)
+        send_otp_via_email.delay(user.id)
 
         return Response(
             {
@@ -141,14 +144,17 @@ class ChangePasswordView(generics.GenericAPIView):
 # Forgot Password
 class ForgotPasswordView(generics.GenericAPIView):
     serializer_class = ForgotPasswordSerializer
+    permission_classes = []
 
     def post(self, request, *args,**kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = User.objects.get(email=serializer.validated_data["email"])
+        email=serializer.validated_data["email"]
+        user = User.objects.filter(email=email).first()
 
-        send_password_reset_email(user)
+        if user:
+            send_password_reset_email.delay(user.id)
 
         return Response(
             {"message": "Password reset link sent to your email."},

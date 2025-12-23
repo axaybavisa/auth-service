@@ -7,7 +7,7 @@ from .models import CustomUser, EmailOTP, PasswordResetToken
 class EmailOTPInline(admin.TabularInline):
     model = EmailOTP
     extra = 0
-    readonly_fields = ('code', 'created_at', 'is_used')
+    readonly_fields = ('code', 'created_at', 'used')
     can_delete = False
 
 
